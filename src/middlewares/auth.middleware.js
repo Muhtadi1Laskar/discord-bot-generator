@@ -1,4 +1,5 @@
 import jwt from 'jsonwebtoken';
+import { errorResponse } from '../utils/response.js';
 
 
 export const verifyJWT = async (req, res, next) => {
@@ -6,9 +7,7 @@ export const verifyJWT = async (req, res, next) => {
     const authHeader = req.headers.authorization;
 
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
-        return res.status(401).json({
-            message: 'Unauthorize'
-        });
+        return errorResponse(res, { message: 'Unauthorize' }, 401)
     }
 
     const token = authHeader.split(' ')[1];
@@ -19,14 +18,10 @@ export const verifyJWT = async (req, res, next) => {
         next();
     } catch (error) {
         if (error.name === "JsonWebTokenError") {
-            return res.status(403).json({
-                message: 'Invalid or expired token'
-            });
+            return errorResponse(res, { message: 'Invalid or expired token' }, 403)
         } else {
             console.error("Error verifying JWT: ", error);
-            return res.status(500).json({
-                message: "Internal Server Error"
-            });
+            return errorResponse(res, { message: "Internal Server Error" }, 500);
         }
     }
 }
