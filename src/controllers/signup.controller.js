@@ -1,5 +1,5 @@
-import { activateUser } from "../service/activate.service.js";
-import { signup } from "../service/signup.service.js";
+import { activateUser } from "../services/activate.service.js";
+import { signup } from "../services/signup.service.js";
 import { successResponse } from "../utils/response.js";
 
 export async function signupController(req, res, next) {
