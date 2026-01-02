@@ -1,4 +1,4 @@
-import { login } from "../service/login.service.js";
+import { login } from "../services/login.service.js";
 import { successResponse } from "../utils/response.js";
 
 export default async function loginController(req, res, next) {
