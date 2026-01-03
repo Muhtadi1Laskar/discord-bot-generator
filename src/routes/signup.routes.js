@@ -6,6 +6,6 @@ import {activateController, signupController} from "../controllers/signup.contro
 const router = express.Router();
 
 router.post("/", validate(signupSchema), signupController);
-router.post("/activate/:token", activateController);
+router.get("/activate/:token", activateController);
 
 export default router;

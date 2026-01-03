@@ -2,13 +2,15 @@ import { Client, GatewayIntentBits } from "discord.js";
 import dotenv from 'dotenv';
 import { fileURLToPath } from 'url';
 import { dirname, join } from "path";
+import { connectDB } from "../config/db.js";
+import { getRules } from "./dataOperations.js";
 
 const MESSAGES = [];
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-dotenv.config({ path: join(__dirname, '../.env') });
+dotenv.config({ path: join(__dirname, '../../.env') });
 
 const client = new Client({
     intents: [
@@ -25,10 +27,10 @@ client.once('ready', () => {
 client.on('messageCreate', async (message) => {
     if (message.author.bot || !message.guild) return;
 
-    const rules = ["toxic", "spam", "scam"];
+    const { bannedWords } = await getRules(message.guild.id);
     const content = message.content.toLowerCase();
 
-    const hasBadWords = rules.some(word => content.includes(word.toLowerCase()));
+    const hasBadWords = bannedWords.some(word => content.includes(word.toLowerCase()));
 
     if (hasBadWords) {
         try {
@@ -41,4 +43,7 @@ client.on('messageCreate', async (message) => {
     }
 });
 
-client.login(process.env.DISCORD_TOKEN);
+
+connectDB().then(() => {
+    client.login(process.env.DISCORD_TOKEN);
+});
