@@ -1,5 +1,4 @@
 import express from "express";
-import { validate } from "../middlewares/validationHandler.js";
 import { discordCallbackController, registerBotConroller } from "../controllers/registerBot.controller.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
 
