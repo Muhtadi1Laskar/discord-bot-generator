@@ -1,13 +1,20 @@
+import { setBotSettings } from "../services/botSettings.service.js";
 import { successResponse } from "../utils/response.js";
 
 export const botSettingController = async (req, res, next) => {
-    const { words, domain } = req.body;
+    const { guildId, rules } = req.body;
+    const userId = req.userId;
 
-    const cleanWords = words.split(',').map(elem => elem.trim());
-    const cleanDomain = domain.split(',').map(elem => elem.trim());
+    const flatenedData = {
+        userId,
+        guildId,
+        bannedWords: rules?.bannedWords,
+        bannedDomains: rules?.bannedDomains,
+        actions: rules?.actions
+    };
 
     try {
-        const savedSettings = await setBotSettings(cleanWords, cleanDomain);
+        const savedSettings = await setBotSettings(flatenedData);
         successResponse(res, { savedSettings }, 201);
     } catch (error) {
         next(error);

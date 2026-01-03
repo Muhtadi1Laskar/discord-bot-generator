@@ -1,6 +1,5 @@
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
-import dotenv from "dotenv";
 import singupModel from "../models/users.model.js";
 import { ApiError } from "../utils/error.js";
 
