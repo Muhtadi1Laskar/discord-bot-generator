@@ -33,8 +33,6 @@ client.on('messageCreate', async (message) => {
     const hasBadWords = bannedWords.some(word => content.includes(word.toLowerCase()));
     const { delete: shouldDelete, warnUser } = actions;
 
-    console.log(shouldDelete, warnUser);
-
     if (hasBadWords) {
         try {
             if (shouldDelete) {
