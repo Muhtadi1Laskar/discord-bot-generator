@@ -21,7 +21,7 @@ const client = new Client({
 });
 
 client.once('ready', () => {
-  console.log(`✅ Logged in as ${client.user.tag}!`);
+  console.log(`\n Logged in as ${client.user.tag}!\n`);
 });
 
 client.on('messageCreate', async (message) => {
@@ -36,7 +36,7 @@ client.on('messageCreate', async (message) => {
         try {
             await message.delete();
             await message.channel.send(`${message.author}, your message was removed`);
-            console.log(`Deleted message in ${message.guild.name} ${message.guild.id}`);
+            console.log(`\nDeleted message in ${message.guild.name} ${message.guild.id}\n`);
         } catch (error) {
             console.error("Failed to delete message: ", e);
         }
