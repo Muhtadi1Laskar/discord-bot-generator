@@ -21,22 +21,32 @@ const client = new Client({
 });
 
 client.once('ready', () => {
-  console.log(`\n Logged in as ${client.user.tag}!\n`);
+    console.log(`\n Logged in as ${client.user.tag}!\n`);
 });
 
 client.on('messageCreate', async (message) => {
     if (message.author.bot || !message.guild) return;
 
-    const { bannedWords } = await getRules(message.guild.id);
+    const { bannedWords, actions } = await getRules(message.guild.id);
     const content = message.content.toLowerCase();
 
     const hasBadWords = bannedWords.some(word => content.includes(word.toLowerCase()));
+    const { delete: shouldDelete, warnUser } = actions;
+
+    console.log(shouldDelete, warnUser);
 
     if (hasBadWords) {
         try {
-            await message.delete();
-            await message.channel.send(`${message.author}, your message was removed`);
-            console.log(`\nDeleted message in ${message.guild.name} ${message.guild.id}\n`);
+            if (shouldDelete) {
+                await message.delete();
+                await message.channel.send(`${message.author}, your message was removed`);
+                console.log(`\nDeleted message in ${message.guild.name} ${message.guild.id}\n`);
+            }
+
+            if (warnUser) {
+                await message.channel.send("Follow the rules cunt");
+
+            }
         } catch (error) {
             console.error("Failed to delete message: ", e);
         }
