@@ -68,7 +68,7 @@ export const botRulesSchema = Joi.object({
             delete: Joi.boolean().default(true),
             warnUser: Joi.boolean().default(true)
         })
-        .default({ delete: true, warnUser: true })
+            .default({ delete: true, warnUser: true })
     })
-    .required()
+        .required()
 });

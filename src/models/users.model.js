@@ -14,6 +14,6 @@ const SignupSchema = new mongoose.Schema({
     timestamps: true
 });
 
-const  signupModel = mongoose.model("user", SignupSchema);
+const signupModel = mongoose.model("user", SignupSchema);
 
 export default signupModel;

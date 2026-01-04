@@ -1,7 +1,6 @@
 import jwt from 'jsonwebtoken';
 import { errorResponse } from '../utils/response.js';
 
-
 export const verifyJWT = async (req, res, next) => {
     try {
         const secret = process.env.JWT_SECRET;
