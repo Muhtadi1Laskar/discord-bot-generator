@@ -12,7 +12,8 @@ const moderatorSchema = new mongoose.Schema({
     },
     topic: {
         type: String,
-        required: true
+        required: false,
+        default: ''
     },
     bannedWords: {
         type: [String],
