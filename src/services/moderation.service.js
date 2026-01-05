@@ -1,4 +1,5 @@
 import BotSettingModel from "../models/bot.model.js";
+import { ApiError } from "../utils/error.js";
 
 export const moderateMessage = async (guilId, authorId, messageContent) => {
     if (!guilId || !/^\d{10,20}$/.test(guilId)) {
@@ -41,6 +42,27 @@ export const moderateMessage = async (guilId, authorId, messageContent) => {
             };
         }
     }
+
+    if (rules.useLLM) {
+        try {
+            const LLMResult = await callLLMWithTimeout(
+                buildModerationPrompt(sanitizedContent, rules),
+                5000
+            );
+
+            if (isValidLLMResponse(LLMResult)) {
+                return {
+                    action: llmResult.violation === 'none' ? 'none' : 'delete',
+                    reason: llmResult.violation,
+                    confidence: llmResult.confidence,
+                    engine: 'llm'
+                };
+            }
+        } catch (error) {
+            console.error("LLM moderation Failed: ", error);
+            throw new ApiError(404, error.message);
+        }
+    }
 }
 
 const sanitizeForLLM = (content) => {
@@ -62,4 +84,21 @@ Analyze this message for violations:
 Respond ONLY in JSON format:
 {"violation": "toxic|spam|off-topic|none", "confidence": 0.0-1.0}
   `.trim();
+}
+
+const callLLMWithTimeout = async (prompt, timeoutMs) => {
+    return Promise.race([
+        callLLM(prompt),
+        new Promise((_, reject) =>
+            setTimeout(() => reject(new Error('LLM_TIMEOUT')), timeoutMs)
+        )
+    ]);
+}
+
+const isValidLLMResponse = (response) => {
+    return response &&
+        typeof response.violation === "string" &&
+        ["toxic", "spam", "off-topic", "none"].includes(response.violation) &&
+        typeof response.confidence === "number" &&
+        response.confidence >= 0 && response.confidence <= 1;
 }
