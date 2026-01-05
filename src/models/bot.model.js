@@ -10,12 +10,16 @@ const moderatorSchema = new mongoose.Schema({
         required: true,
         match: [/^\d{10,20}$/, 'Invalid Discord guild ID']
     },
+    topic: {
+        type: String,
+        required: true
+    },
     bannedWords: {
         type: [String],
         required: true,
         default: [],
         validate: {
-            validator: function (arr) {
+            validator: (arr) => {
                 return arr.every(word => typeof word === "string" && word.trim().length > 0);
             },
             message: "All bannedWords must be non-empty strings"
@@ -26,7 +30,7 @@ const moderatorSchema = new mongoose.Schema({
         required: false,
         default: [],
         validate: {
-            validator: function (arr) {
+            validator: (arr) => {
                 return arr.every(domain => {
                     const clean = domain.trim().toLowerCase();
                     return /^(?:\*\.)?[a-z0-9][a-z0-9.-]*[a-z0-9]$/.test(clean);
