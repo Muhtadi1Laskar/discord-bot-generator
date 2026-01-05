@@ -9,6 +9,12 @@ export const botRulesSchema = Joi.object({
             'any.required': 'guildId is required'
         }),
 
+    topic: Joi.string()
+        .required()
+        .messages({
+            'any.required': 'topic is required'
+        }),
+
     rules: Joi.object({
         bannedWords: Joi.array()
             .items(
