@@ -84,7 +84,7 @@ Analyze this message for violations:
 "${content}"
 
 Respond ONLY in JSON format:
-{"violation": "toxic|spam|off-topic|none", "confidence": 0.0-1.0}
+{"violation": "toxic|spam|off-topic|none", "confidence": 0.0-1.0, "action": "warn|delete|kickoff"}
   `.trim();
 }
 
