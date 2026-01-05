@@ -32,7 +32,7 @@ export const moderateMessage = async (guilId, authorId, messageContent) => {
             lowerMsg.includes(word.toLowerCase())
         );
 
-        if(matchedWord) {
+        if (matchedWord) {
             return {
                 action: "delete",
                 reason: "bannedWord",
@@ -49,4 +49,17 @@ const sanitizeForLLM = (content) => {
         .replace(/@everyone|@here/g, '[MENTION]')
         .replase(/```[\s\S]*?```/g, '[CODE_BLOCK]')
         .replace(/\bhttps?:\/\/[^\s]+/g, '[LINK]');
+}
+
+const buildModerationPrompt = (content, rules) => {
+    return `
+You are a Discord moderator for a server about: ${rules.topic || 'general community'}.
+Server rules: ${rules.customRules || 'Be respectful and no spam.'}
+
+Analyze this message for violations:
+"${content}"
+
+Respond ONLY in JSON format:
+{"violation": "toxic|spam|off-topic|none", "confidence": 0.0-1.0}
+  `.trim();
 }
