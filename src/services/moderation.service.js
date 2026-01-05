@@ -1,7 +1,6 @@
 import BotSettingModel from "../models/bot.model.js";
 import { ApiError } from "../utils/error.js";
 
-
 export const processMessages = async (guildId, contents) => {
     if(!contents || contents.length === 0) {
         throw new ApiError(400, "Please provice message contents from the bot");
