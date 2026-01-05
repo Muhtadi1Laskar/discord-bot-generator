@@ -17,4 +17,3 @@ app.use('/api', router);
 app.use(errorHandler);
 
 export default app;
-
