@@ -1,15 +1,16 @@
+import { connectDB } from "../config/db.js";
 import BotSettingModel from "../models/bot.model.js";
 import { ApiError } from "../utils/error.js";
 
-export const moderateMessage = async (guilId, authorId, messageContent) => {
-    if (!guilId || !/^\d{10,20}$/.test(guilId)) {
+export const moderateMessage = async (guildId, messageContent) => {
+    if (!guildId || !/^\d{10,20}$/.test(guildId)) {
         return {
             action: "none",
             reason: "invalid guild Id"
         };
     }
 
-    if (!messageContent || typeof messageContent === "string") {
+    if (!messageContent || typeof messageContent !== "string") {
         return {
             action: "none",
             reason: "invalid content"
@@ -18,7 +19,8 @@ export const moderateMessage = async (guilId, authorId, messageContent) => {
 
     const sanitizedContent = sanitizeForLLM(messageContent);
 
-    const rules = await BotSettingModel.findOne({ guildId });
+    const rules = await BotSettingModel.findOne({guildId});
+
 
     if (!rules) {
         return {
@@ -27,7 +29,7 @@ export const moderateMessage = async (guilId, authorId, messageContent) => {
         };
     }
 
-    if (rules.bannedWords?.kength) {
+    if (rules.bannedWords?.length) {
         const lowerMsg = sanitizedContent.toLowerCase();
         const matchedWord = rules.bannedWords.some(word =>
             lowerMsg.includes(word.toLowerCase())
@@ -45,16 +47,16 @@ export const moderateMessage = async (guilId, authorId, messageContent) => {
 
     if (rules.useLLM) {
         try {
-            const LLMResult = await callLLMWithTimeout(
+            const LLMResult = callLLMWithTimeout(
                 buildModerationPrompt(sanitizedContent, rules),
                 5000
             );
 
             if (isValidLLMResponse(LLMResult)) {
                 return {
-                    action: llmResult.violation === 'none' ? 'none' : 'delete',
-                    reason: llmResult.violation,
-                    confidence: llmResult.confidence,
+                    action: LLMResult.violation === 'none' ? 'none' : 'delete',
+                    reason: LLMResult.violation,
+                    confidence: LLMResult.confidence,
                     engine: 'llm'
                 };
             }
@@ -69,7 +71,7 @@ const sanitizeForLLM = (content) => {
     return content
         .substring(0, 500)
         .replace(/@everyone|@here/g, '[MENTION]')
-        .replase(/```[\s\S]*?```/g, '[CODE_BLOCK]')
+        .replace(/```[\s\S]*?```/g, '[CODE_BLOCK]')
         .replace(/\bhttps?:\/\/[^\s]+/g, '[LINK]');
 }
 
@@ -86,13 +88,18 @@ Respond ONLY in JSON format:
   `.trim();
 }
 
-const callLLMWithTimeout = async (prompt, timeoutMs) => {
-    return Promise.race([
-        callLLM(prompt),
-        new Promise((_, reject) =>
-            setTimeout(() => reject(new Error('LLM_TIMEOUT')), timeoutMs)
-        )
-    ]);
+const callLLMWithTimeout = (prompt, timeoutMs) => {
+    // return Promise.race([
+    //     callLLM(prompt),
+    //     new Promise((_, reject) =>
+    //         setTimeout(() => reject(new Error('LLM_TIMEOUT')), timeoutMs)
+    //     )
+    // ]);
+    return {
+        violation: "toxic",
+        confidence: 0.5,
+        action: "delete"
+    }
 }
 
 const isValidLLMResponse = (response) => {

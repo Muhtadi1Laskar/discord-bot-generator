@@ -22,14 +22,13 @@ export const createGuild = async (userId, guildId) => {
     }
 }
 
-export const setBotSettings = async ({ userId, guildId, topic, bannedWords, bannedDomains, actions }) => {
+export const setBotSettings = async ({ userId, guildId, topic, bannedWords, bannedDomains, actions, useLLM }) => {
     const updatedData = {};
 
-    console.log(topic);
 
-    if(topic !== undefined) {
+    if (topic !== undefined) {
         updatedData.topic = topic;
-    } 
+    }
 
     if (bannedWords !== undefined) {
         updatedData.bannedWords = bannedWords;
@@ -44,6 +43,10 @@ export const setBotSettings = async ({ userId, guildId, topic, bannedWords, bann
             delete: actions.delete,
             warnUser: actions.warnUser
         };
+    }
+
+    if (useLLM) {
+        updatedData.useLLM = useLLM;
     }
 
     const updatedBotSettings = await BotSettingModel.findOneAndUpdate(

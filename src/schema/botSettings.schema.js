@@ -76,5 +76,11 @@ export const botRulesSchema = Joi.object({
         })
             .default({ delete: true, warnUser: true })
     })
+        .required(),
+        
+    useLLM: Joi.boolean()
         .required()
+        .messages({
+            "any.required": "useLLM is required"
+        })
 });

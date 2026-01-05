@@ -47,6 +47,10 @@ const moderatorSchema = new mongoose.Schema({
         warnUser: {
             type: Boolean
         }
+    },
+    useLLM: {
+        type: Boolean,
+        default: false,
     }
 }, {
     timestamps: true

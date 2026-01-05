@@ -2,7 +2,7 @@ import { setBotSettings } from "../services/botSettings.service.js";
 import { successResponse } from "../utils/response.js";
 
 export const botSettingController = async (req, res, next) => {
-    const { guildId, topic, rules } = req.body;
+    const { guildId, topic, rules, useLLM } = req.body;
     const userId = req.userId;
 
     const flatenedData = {
@@ -11,7 +11,8 @@ export const botSettingController = async (req, res, next) => {
         topic,
         bannedWords: rules?.bannedWords,
         bannedDomains: rules?.bannedDomains,
-        actions: rules?.actions
+        actions: rules?.actions,
+        useLLM
     };
 
     try {
