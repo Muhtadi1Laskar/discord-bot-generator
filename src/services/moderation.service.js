@@ -1,8 +1,23 @@
-import { connectDB } from "../config/db.js";
 import BotSettingModel from "../models/bot.model.js";
 import { ApiError } from "../utils/error.js";
 
-export const moderateMessage = async (guildId, messageContent) => {
+
+export const processMessages = async (guildId, contents) => {
+    if(!contents || contents.length === 0) {
+        throw new ApiError(400, "Please provice message contents from the bot");
+    }
+
+    if(!Array.isArray(contents)) {
+        throw new ApiError(400, "contents should be an array");
+    }
+
+    const promises = contents.map(elem => moderateMessage(guildId, elem));
+    const result = await Promise.all(promises);
+
+    return result;
+}
+
+export const moderateMessage = async (guildId, { messageContent, userId}) => {
     if (!guildId || !/^\d{10,20}$/.test(guildId)) {
         return {
             action: "none",
@@ -40,7 +55,8 @@ export const moderateMessage = async (guildId, messageContent) => {
                 action: "delete",
                 reason: "bannedWord",
                 detail: matchedWord,
-                engine: "keyword"
+                engine: "keyword",
+                userId
             };
         }
     }
@@ -57,7 +73,8 @@ export const moderateMessage = async (guildId, messageContent) => {
                     action: LLMResult.violation === 'none' ? 'none' : 'delete',
                     reason: LLMResult.violation,
                     confidence: LLMResult.confidence,
-                    engine: 'llm'
+                    engine: 'llm',
+                    userId
                 };
             }
         } catch (error) {
