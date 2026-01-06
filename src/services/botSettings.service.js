@@ -24,6 +24,10 @@ export const createGuild = async (userId, guildId) => {
 export const setBotSettings = async ({ userId, guildId, topic, rules, useLLM }) => {
     const updatedData = {};
 
+    if (topic) {
+        updatedData.topic = topic;
+    }
+
     if (useLLM) {
         updatedData.useLLM = useLLM;
     }
