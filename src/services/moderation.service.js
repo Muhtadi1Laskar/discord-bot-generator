@@ -16,7 +16,7 @@ export const processMessages = async (guildId, contents) => {
     return result;
 }
 
-export const moderateMessage = async (guildId, { messageContent, userId}) => {
+export const moderateMessage = async ({ guildId, messageContent, authorId, authorName}) => {
     if (!guildId || !/^\d{10,20}$/.test(guildId)) {
         return {
             action: "none",
@@ -55,7 +55,8 @@ export const moderateMessage = async (guildId, { messageContent, userId}) => {
                 reason: "bannedWord",
                 detail: matchedWord,
                 engine: "keyword",
-                userId
+                authorId,
+                authorName
             };
         }
     }
@@ -73,7 +74,8 @@ export const moderateMessage = async (guildId, { messageContent, userId}) => {
                     reason: LLMResult.violation,
                     confidence: LLMResult.confidence,
                     engine: 'llm',
-                    userId
+                    authorId,
+                    authorName
                 };
             }
         } catch (error) {

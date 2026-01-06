@@ -27,30 +27,40 @@ client.once('ready', () => {
 client.on('messageCreate', async (message) => {
     if (message.author.bot || !message.guild) return;
 
-    const { bannedWords, actions } = await getRules(message.guild.id);
+    if (!/[a-zA-Z0-9]/.test(message.content)) {
+        return;
+    }
+
+    // const { bannedWords, actions } = await getRules(message.guild.id);
     const content = message.content.toLowerCase();
 
-    const hasBadWords = bannedWords.some(word => content.includes(word.toLowerCase()));
-    const { delete: shouldDelete, warnUser } = actions;
+    const requestBody = {
+        guildId: message.guildId,
+        authorId: message.author.id,
+        authorName: message.author.globalName,
+        messageContent: content
+    };
 
-    if (hasBadWords) {
-        try {
-            if (shouldDelete) {
-                await message.delete();
-                await message.channel.send(`${message.author}, your message was removed`);
-                console.log(`\nDeleted message in ${message.guild.name} ${message.guild.id}\n`);
-            }
+    // const hasBadWords = bannedWords.some(word => content.includes(word.toLowerCase()));
+    // const { delete: shouldDelete, warnUser } = actions;
 
-            if (warnUser) {
-                await message.channel.send("Follow the rules cunt");
+    // if (hasBadWords) {
+    //     try {
+    //         if (shouldDelete) {
+    //             await message.delete();
+    //             await message.channel.send(`${message.author}, your message was removed`);
+    //             console.log(`\nDeleted message in ${message.guild.name} ${message.guild.id}\n`);
+    //         }
 
-            }
-        } catch (error) {
-            console.error("Failed to delete message: ", e);
-        }
-    }
+    //         if (warnUser) {
+    //             await message.channel.send("Follow the rules cunt");
+
+    //         }
+    //     } catch (error) {
+    //         console.error("Failed to delete message: ", e);
+    //     }
+    // }
 });
-
 
 connectDB().then(() => {
     client.login(process.env.DISCORD_TOKEN);
