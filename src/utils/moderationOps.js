@@ -15,3 +15,30 @@ export const checkRepetitions = (text, maxRepeats) => {
     }
     return false;
 }
+
+const isCapitalChar = (char) => /[A-Z]/.test(char);
+
+export const calculateCapitalRatio = (sentence) => {
+    if (sentence.length === 0) {
+        return 0;
+    }
+
+    const len = sentence.length;
+    let capitalCharCount = 0;
+
+    for (let i = 0; i < len; i++) {
+        if (isCapitalChar(sentence[i])) {
+            capitalCharCount++;
+        }
+    }
+    return (capitalCharCount / len);
+}
+
+export const checkLinks = (text) => {
+    const regex = /^(https?|ftp):\/\/[^\s/$.?#].[^\s]*$/i;
+    return regex.test(text);
+}
+
+export const detectGlobalPing = (text) => {
+    return /@everyone|@here/g.test(text);
+}
