@@ -7,30 +7,34 @@ const rulesActionSchema = new mongoose.Schema({
 }, { _id: false });
 
 const bannedWordsSchema = new mongoose.Schema({
-    type: [String],
-    required: true,
-    default: [],
-    validate: {
-        validator: (arr) => {
-            return arr.every(word => typeof word === "string" && word.trim().length > 0);
+    words: {
+        type: [String],
+        required: true,
+        default: [],
+        validate: {
+            validator: (arr) => {
+                return arr.every(word => typeof word === "string" && word.trim().length > 0);
+            },
+            message: "All bannedWords must be non-empty strings"
         },
-        message: "All bannedWords must be non-empty strings"
     },
     actions: rulesActionSchema
 }, { _id: false });
 
 const bannedLinksSchema = new mongoose.Schema({
-    type: [String],
-    required: false,
-    default: [],
-    validate: {
-        validator: (arr) => {
-            return arr.every(domain => {
-                const clean = domain.trim().toLowerCase();
-                return /^(?:\*\.)?[a-z0-9][a-z0-9.-]*[a-z0-9]$/.test(clean);
-            });
+    doomains: {
+        type: [String],
+        required: false,
+        default: [],
+        validate: {
+            validator: (arr) => {
+                return arr.every(domain => {
+                    const clean = domain.trim().toLowerCase();
+                    return /^(?:\*\.)?[a-z0-9][a-z0-9.-]*[a-z0-9]$/.test(clean);
+                });
+            },
+            message: 'Invalid domain format in bannedDomains'
         },
-        message: 'Invalid domain format in bannedDomains'
     },
     actions: rulesActionSchema
 }, { _id: false });
@@ -43,9 +47,9 @@ const spamSchema = new mongoose.Schema({
         max: 10
     },
     actions: rulesActionSchema
-}, { _id: true });
+}, { _id: false });
 
-const aggressionDetection = new Mongoose.Schema({
+const aggressionDetectionSchema = new mongoose.Schema({
     maxCapsRatio: {
         type: Number,
         default: 0.0
@@ -57,7 +61,7 @@ const moderationRulesSchema = new mongoose.Schema({
     bannedWords: bannedWordsSchema,
     bannedDomains: bannedLinksSchema,
     spamDetection: spamSchema,
-    aggressionDetection: aggressionDetection,
+    aggressionDetection: aggressionDetectionSchema,
     allowLinks: { type: Boolean, default: true },
     allowPings: { type: Boolean, default: true }
 });

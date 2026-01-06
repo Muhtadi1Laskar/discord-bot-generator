@@ -1,86 +1,99 @@
-import Joi from "joi";
+import Joi from 'joi';
 
-export const botRulesSchema = Joi.object({
+// Reusable action schema
+const actionSchema = Joi.object({
+    delete: Joi.boolean().default(false),
+    warn: Joi.boolean().default(false),
+    mute: Joi.boolean().default(false)
+}).default({ delete: false, warn: false, mute: false });
+
+// Banned Words Schema
+const bannedWordsSchema = Joi.object({
+    words: Joi.array().items(
+        Joi.string()
+            .trim()
+            .min(1)
+            .max(100)
+            .custom((value, helpers) => {
+                if (value.trim() === '') {
+                    return helpers.error('string.empty');
+                }
+                return value;
+            })
+    )
+        .required()
+        .default([]),
+    actions: actionSchema
+}).default({ words: [], actions: { delete: false, warn: false, mute: false } });
+
+// Banned Domains Schema
+const bannedDomainsSchema = Joi.object({
+    domains: Joi.array().items(
+        Joi.string()
+            .trim()
+            .min(1)
+            .max(253)
+            .lowercase()
+            .pattern(/^(?:\*\.)?[a-z0-9][a-z0-9.-]*[a-z0-9]$/)
+    )
+        .optional()
+        .default([]),
+    actions: actionSchema
+}).default({ domains: [], actions: { delete: false, warn: false, mute: false } });
+
+// Spam Detection Schema
+const spamSchema = Joi.object({
+    maxRepeats: Joi.number()
+        .integer()
+        .min(4)
+        .max(10)
+        .default(5),
+    actions: actionSchema
+}).default({ maxRepeats: 5, actions: { delete: false, warn: false, mute: false } });
+
+// Aggression Detection Schema
+const aggressionSchema = Joi.object({
+    maxCapsRatio: Joi.number()
+        .min(0)
+        .max(1)
+        .precision(2)
+        .default(0.0),
+    actions: actionSchema
+}).default({ maxCapsRatio: 0.0, actions: { delete: false, warn: false, mute: false } });
+
+// Main Rules Schema
+const rulesSchema = Joi.object({
+    bannedWords: bannedWordsSchema,
+    bannedDomains: bannedDomainsSchema,
+    spamDetection: spamSchema,
+    aggressionDetection: aggressionSchema,
+    allowLinks: Joi.boolean().default(true),
+    allowPings: Joi.boolean().default(true)
+}).default({
+    bannedWords: { words: [], actions: { delete: false, warn: false, mute: false } },
+    bannedDomains: { domains: [], actions: { delete: false, warn: false, mute: false } },
+    spamDetection: { maxRepeats: 5, actions: { delete: false, warn: false, mute: false } },
+    aggressionDetection: { maxCapsRatio: 0.0, actions: { delete: false, warn: false, mute: false } },
+    allowLinks: true,
+    allowPings: true
+});
+
+// Full Bot Settings Schema
+export const botSettingsSchema = Joi.object({
+    userId: Joi.string().optional(), // Keep as string if not using ObjectId
     guildId: Joi.string()
-        .pattern(/^\d{10,20}$/) // Discord IDs are 17-20 digit snowflakes
+        .pattern(/^\d{17,20}$/)
         .required()
         .messages({
             'string.pattern.base': 'guildId must be a valid Discord server ID (17-20 digits)',
             'any.required': 'guildId is required'
         }),
-
     topic: Joi.string()
-        .required()
-        .messages({
-            'any.required': 'topic is required'
-        }),
-
-    rules: Joi.object({
-        bannedWords: Joi.array()
-            .items(
-                Joi.string()
-                    .trim()
-                    .min(1)
-                    .max(100)
-                    .replace(/\s+/g, ' ') // Normalize whitespace
-                    .custom((value, helpers) => {
-                        // Prevent empty strings after trimming
-                        if (value.trim() === '') {
-                            return helpers.error('string.empty');
-                        }
-                        return value.toLowerCase(); // Normalize to lowercase
-                    })
-            )
-            .unique()
-            .min(0)
-            .max(100)
-            .default([])
-            .messages({
-                'array.unique': 'Duplicate banned words are not allowed',
-                'array.max': 'Maximum 100 banned words allowed'
-            }),
-
-        bannedDomains: Joi.array()
-            .items(
-                Joi.string()
-                    .trim()
-                    .min(1)
-                    .max(253) // Max domain length
-                    .lowercase()
-                    .pattern(/^[a-z0-9][a-z0-9.-]*[a-z0-9]$/)
-                    .custom((value, helpers) => {
-                        // Handle wildcards like *.xyz
-                        if (value.startsWith('*.') && value.length > 2) {
-                            const domainPart = value.slice(2);
-                            if (!/^[a-z0-9][a-z0-9.-]*[a-z0-9]$/.test(domainPart)) {
-                                return helpers.error('string.pattern.base');
-                            }
-                            return value;
-                        }
-                        return value;
-                    })
-            )
-            .unique()
-            .min(0)
-            .max(50)
-            .default([])
-            .messages({
-                'array.unique': 'Duplicate banned domains are not allowed',
-                'string.pattern.base': 'Invalid domain format (e.g., example.com or *.xyz)',
-                'array.max': 'Maximum 50 banned domains allowed'
-            }),
-
-        actions: Joi.object({
-            delete: Joi.boolean().default(true),
-            warnUser: Joi.boolean().default(true)
-        })
-            .default({ delete: true, warnUser: true })
-    })
-        .required(),
-        
-    useLLM: Joi.boolean()
-        .required()
-        .messages({
-            "any.required": "useLLM is required"
-        })
+        .max(100)
+        .optional()
+        .default(''),
+    rules: rulesSchema,
+    useLLM: Joi.boolean().default(false)
+}).messages({
+    'object.unknown': 'Unexpected field in request body'
 });

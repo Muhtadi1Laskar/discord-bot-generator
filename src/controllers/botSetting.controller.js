@@ -9,9 +9,7 @@ export const botSettingController = async (req, res, next) => {
         userId,
         guildId,
         topic,
-        bannedWords: rules?.bannedWords,
-        bannedDomains: rules?.bannedDomains,
-        actions: rules?.actions,
+        rules,
         useLLM
     };
 
