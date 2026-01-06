@@ -38,7 +38,7 @@ client.on('messageCreate', async (message) => {
     };
 
     const responseFromBackend = await makeAPICall(requestBody);
-    
+
     console.log(responseFromBackend);
 });
 

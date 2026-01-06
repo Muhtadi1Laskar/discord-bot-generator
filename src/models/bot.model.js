@@ -7,6 +7,10 @@ const rulesActionSchema = new mongoose.Schema({
 }, { _id: false });
 
 const bannedWordsSchema = new mongoose.Schema({
+    enabled: {
+        type: Boolean,
+        default: false
+    },
     words: {
         type: [String],
         required: true,
@@ -22,6 +26,10 @@ const bannedWordsSchema = new mongoose.Schema({
 }, { _id: false });
 
 const bannedLinksSchema = new mongoose.Schema({
+    enabled: {
+        type: Boolean,
+        default: false
+    },
     doomains: {
         type: [String],
         required: false,
@@ -40,6 +48,10 @@ const bannedLinksSchema = new mongoose.Schema({
 }, { _id: false });
 
 const spamSchema = new mongoose.Schema({
+    enabled: {
+        type: Boolean,
+        default: false
+    },
     maxRepeats: {
         type: Number,
         default: 5,
@@ -49,11 +61,15 @@ const spamSchema = new mongoose.Schema({
     actions: rulesActionSchema
 }, { _id: false });
 
-const aggressionDetectionSchema = new mongoose.Schema({
-    maxCapsRatio: {
-        type: Number,
-        default: 0.0
-    },
+const allowLinksSchema = new mongoose.Schema({
+    type: Boolean,
+    default: false,
+    actions: rulesActionSchema
+}, { _id: false });
+
+const allowPingSchema = new mongoose.Schema({
+    type: Boolean,
+    default: false,
     actions: rulesActionSchema
 }, { _id: false });
 
@@ -61,9 +77,8 @@ const moderationRulesSchema = new mongoose.Schema({
     bannedWords: bannedWordsSchema,
     bannedDomains: bannedLinksSchema,
     spamDetection: spamSchema,
-    aggressionDetection: aggressionDetectionSchema,
-    allowLinks: { type: Boolean, default: true },
-    allowPings: { type: Boolean, default: true }
+    allowLinks: allowLinksSchema,
+    allowPings: allowPingSchema
 });
 
 const moderatorSchema = new mongoose.Schema({

@@ -110,22 +110,22 @@ const isValidLLMResponse = (response) => {
         response.confidence >= 0 && response.confidence <= 1;
 }
 
-const applyRules = (rules, textContent) => {
-    const bannedWords = rules.bannedWords || [];
-    const spamDetection = rules.spamDetection;
-    const allowLinks = rules.allowLinks;
-    const allowPings = rules.allowPings;
 
+const applyRules = (rules, text) => {
     const rulesToApply = [];
 
+    const textContent = text.toLowerCase();
+
+    const bannedWords = rules.bannedWords;
     if (bannedWords || bannedWords.words.length > 0) {
-        const matchedWords = bannedWords.words.some(word =>
+        const filteredWords = bannedWords.words.filter(word =>
             textContent.includes(word)
         );
-        if (matchedWords) {
+
+        if (filteredWords.length > 0) {
             rulesToApply.push({
                 reason: "bannedWords",
-                detail: matchedWords,
+                detail: filteredWords,
                 confidence: 1,
                 engine: "keyword",
                 rulesToApply: bannedWords?.actions || {},
@@ -133,32 +133,33 @@ const applyRules = (rules, textContent) => {
         }
     }
 
+    const spamDetection = rules.spamDetection;
     if (spamDetection) {
         if (checkRepetitions(textContent, spamDetection.maxRepeats)) {
             rulesToApply.push({
                 reason: "spamDetection",
-                detail: "",
+                detail: `repeated more than ${spamDetection.maxRepeats} times`,
                 confidence: 1,
-                engine: "keyword",
-                rulesToApply: spamDetection?.actions || {}
+                engine: "behavior",
+                rulesToApply: spamDetection.actions
             });
         }
     }
 
-    if (!allowLinks && checkLinks(textContent)) {
+    if (rules.allowLinks === false && checkLinks(textContent)) {
         rulesToApply.push({
             reason: "linksDetected",
-            detail: "Malacious link is detected",
+            detail: "Links are not allowed in this server",
             confidence: 1,
             engine: "keyword",
             rulesToApply: { delete: true }
         });
     }
 
-    if (!allowPings && detectGlobalPing(textContent)) {
+    if (rules.allowPings === false && detectGlobalPing(textContent)) {
         rulesToApply.push({
             reason: "pingDetected",
-            detail: "Global ping is not allowed",
+            detail: "Global mentions are not allowed in this server",
             confidence: 1,
             engine: "keyword",
             rulesToApply: { delete: true }
