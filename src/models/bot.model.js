@@ -61,24 +61,13 @@ const spamSchema = new mongoose.Schema({
     actions: rulesActionSchema
 }, { _id: false });
 
-const allowLinksSchema = new mongoose.Schema({
-    type: Boolean,
-    default: false,
-    actions: rulesActionSchema
-}, { _id: false });
-
-const allowPingSchema = new mongoose.Schema({
-    type: Boolean,
-    default: false,
-    actions: rulesActionSchema
-}, { _id: false });
 
 const moderationRulesSchema = new mongoose.Schema({
     bannedWords: bannedWordsSchema,
     bannedDomains: bannedLinksSchema,
     spamDetection: spamSchema,
-    allowLinks: allowLinksSchema,
-    allowPings: allowPingSchema
+    allowLinks: { type: Boolean, default: false },
+    allowPings: { type: Boolean, default: false }
 });
 
 const moderatorSchema = new mongoose.Schema({

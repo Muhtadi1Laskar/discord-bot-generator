@@ -117,7 +117,7 @@ const applyRules = (rules, text) => {
     const textContent = text.toLowerCase();
 
     const bannedWords = rules.bannedWords;
-    if (bannedWords || bannedWords.words.length > 0) {
+    if (bannedWords?.enabled || bannedWords.words.length > 0) {
         const filteredWords = bannedWords.words.filter(word =>
             textContent.includes(word)
         );
@@ -134,7 +134,8 @@ const applyRules = (rules, text) => {
     }
 
     const spamDetection = rules.spamDetection;
-    if (spamDetection) {
+    console.log("Spam DEcection", spamDetection);
+    if (spamDetection.enabled) {
         if (checkRepetitions(textContent, spamDetection.maxRepeats)) {
             rulesToApply.push({
                 reason: "spamDetection",
@@ -165,7 +166,6 @@ const applyRules = (rules, text) => {
             rulesToApply: { delete: true }
         });
     }
-
 
     return rulesToApply;
 }
