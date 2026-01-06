@@ -9,6 +9,11 @@ const actionSchema = Joi.object({
 
 // Banned Words Schema
 const bannedWordsSchema = Joi.object({
+    enabled: Joi.boolean()
+        .required()
+        .messages({
+            "any.required": "enabled is rewuired"
+        }),
     words: Joi.array().items(
         Joi.string()
             .trim()
@@ -28,6 +33,11 @@ const bannedWordsSchema = Joi.object({
 
 // Banned Domains Schema
 const bannedDomainsSchema = Joi.object({
+    enabled: Joi.boolean()
+        .required()
+        .messages({
+            "any.required": "enabled is rewuired"
+        }),
     domains: Joi.array().items(
         Joi.string()
             .trim()
@@ -43,6 +53,11 @@ const bannedDomainsSchema = Joi.object({
 
 // Spam Detection Schema
 const spamSchema = Joi.object({
+    enabled: Joi.boolean()
+        .required()
+        .messages({
+            "any.required": "enabled is rewuired"
+        }),
     maxRepeats: Joi.number()
         .integer()
         .min(4)
@@ -51,22 +66,12 @@ const spamSchema = Joi.object({
     actions: actionSchema
 }).default({ maxRepeats: 5, actions: { delete: false, warn: false, mute: false } });
 
-// Aggression Detection Schema
-const aggressionSchema = Joi.object({
-    maxCapsRatio: Joi.number()
-        .min(0)
-        .max(1)
-        .precision(2)
-        .default(0.0),
-    actions: actionSchema
-}).default({ maxCapsRatio: 0.0, actions: { delete: false, warn: false, mute: false } });
 
 // Main Rules Schema
 const rulesSchema = Joi.object({
     bannedWords: bannedWordsSchema,
     bannedDomains: bannedDomainsSchema,
     spamDetection: spamSchema,
-    aggressionDetection: aggressionSchema,
     allowLinks: Joi.boolean().default(true),
     allowPings: Joi.boolean().default(true)
 }).default({
