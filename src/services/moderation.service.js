@@ -17,13 +17,6 @@ export const processMessages = async (guildId, contents) => {
 }
 
 export const moderateMessage = async ({ guildId, messageContent, authorId, authorName}) => {
-    if (!guildId || !/^\d{10,20}$/.test(guildId)) {
-        return {
-            action: "none",
-            reason: "invalid guild Id"
-        };
-    }
-
     if (!messageContent || typeof messageContent !== "string") {
         return {
             action: "none",
@@ -32,9 +25,7 @@ export const moderateMessage = async ({ guildId, messageContent, authorId, autho
     }
 
     const sanitizedContent = sanitizeForLLM(messageContent);
-
     const rules = await BotSettingModel.findOne({guildId});
-
 
     if (!rules) {
         return {
