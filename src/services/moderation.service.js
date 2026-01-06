@@ -16,7 +16,7 @@ export const processMessages = async (guildId, contents) => {
     return result;
 }
 
-export const moderateMessage = async ({ guildId, messageContent, authorId, authorName}) => {
+export const moderateMessage = async ({ guildId, messageContent, authorId, authorName, messageId}) => {
     if (!messageContent || typeof messageContent !== "string") {
         return {
             action: "none",
@@ -25,7 +25,7 @@ export const moderateMessage = async ({ guildId, messageContent, authorId, autho
     }
 
     const sanitizedContent = sanitizeForLLM(messageContent);
-    const rules = await BotSettingModel.findOne({guildId});
+    const rules = await BotSettingModel.findOne({ guildId });
 
     if (!rules) {
         return {
@@ -43,11 +43,13 @@ export const moderateMessage = async ({ guildId, messageContent, authorId, autho
         if (matchedWord) {
             return {
                 action: "delete",
-                reason: "bannedWord",
+                reason: "bannedWords",
                 detail: matchedWord,
+                confidence: 1,
                 engine: "keyword",
                 authorId,
-                authorName
+                authorName,
+                messageId
             };
         }
     }
@@ -61,12 +63,13 @@ export const moderateMessage = async ({ guildId, messageContent, authorId, autho
 
             if (isValidLLMResponse(LLMResult)) {
                 return {
-                    action: LLMResult.violation === 'none' ? 'none' : 'delete',
+                    action: LLMResult.violation,
                     reason: LLMResult.violation,
                     confidence: LLMResult.confidence,
                     engine: 'llm',
                     authorId,
-                    authorName
+                    authorName,
+                    messageId
                 };
             }
         } catch (error) {
@@ -107,7 +110,7 @@ const callLLMWithTimeout = (prompt, timeoutMs) => {
     return {
         violation: "toxic",
         confidence: 0.5,
-        action: "delete"
+        action: "warn"
     }
 }
 

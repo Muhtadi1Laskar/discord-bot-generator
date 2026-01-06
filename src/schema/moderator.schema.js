@@ -30,7 +30,15 @@ const moderateMessageSchema = Joi.object({
         .messages({
             'string.max': 'messageContent exceeds Discord\'s 2000-character limit',
             'any.required': 'messageContent is required'
-        })
+        }),
+    
+    messageId: Joi.string()
+        .pattern(/^\d{10,20}$/)
+        .required()
+        .messages({
+            'string.pattern.base': 'messageId must be a valid Discord message ID (17-20 digits)',
+            'any.required': 'messageId is required'
+        }),
 }).messages({
     'object.unknown': 'Unexpected field in request body'
 });

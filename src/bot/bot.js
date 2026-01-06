@@ -1,11 +1,8 @@
 import { Client, GatewayIntentBits } from "discord.js";
 import dotenv from 'dotenv';
 import { fileURLToPath } from 'url';
-import { dirname, join } from "path";
-import { connectDB } from "../config/db.js";
-import { getRules } from "./dataOperations.js";
-
-const MESSAGES = [];
+import { dirname, join } from "path";;
+import { makeAPICall } from "./apiCall.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -31,37 +28,38 @@ client.on('messageCreate', async (message) => {
         return;
     }
 
-    // const { bannedWords, actions } = await getRules(message.guild.id);
     const content = message.content.toLowerCase();
-
     const requestBody = {
         guildId: message.guildId,
         authorId: message.author.id,
         authorName: message.author.globalName,
-        messageContent: content
+        messageContent: content,
+        messageId: message.id
     };
 
-    // const hasBadWords = bannedWords.some(word => content.includes(word.toLowerCase()));
-    // const { delete: shouldDelete, warnUser } = actions;
+    const responseFromBackend = await makeAPICall(requestBody);
+    const { action, ...restBody } = responseFromBackend;
 
-    // if (hasBadWords) {
-    //     try {
-    //         if (shouldDelete) {
-    //             await message.delete();
-    //             await message.channel.send(`${message.author}, your message was removed`);
-    //             console.log(`\nDeleted message in ${message.guild.name} ${message.guild.id}\n`);
-    //         }
-
-    //         if (warnUser) {
-    //             await message.channel.send("Follow the rules cunt");
-
-    //         }
-    //     } catch (error) {
-    //         console.error("Failed to delete message: ", e);
-    //     }
-    // }
+    if(action === "delete") {
+        await deleteAction(message, restBody);
+    }
 });
 
-connectDB().then(() => {
-    client.login(process.env.DISCORD_TOKEN);
-});
+const deleteAction = async (message, response) => {
+    const { authorName, authorId, reason, messageId } = response;
+    await message.delete(messageId);
+
+    switch (reason) {
+        case "bannedWords":
+            await message.channel.send(`${authorName}, your message was removed because it contained banned word`)
+            break;
+
+        case "warn":
+            await message.channel.send(`${authorName}, your message was removed because it contained banned word`)
+            break;
+        default:
+            break;
+    }
+}
+
+client.login(process.env.DISCORD_TOKEN);
