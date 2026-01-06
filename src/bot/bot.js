@@ -38,11 +38,8 @@ client.on('messageCreate', async (message) => {
     };
 
     const responseFromBackend = await makeAPICall(requestBody);
-    const { action, ...restBody } = responseFromBackend;
-
-    if(action === "delete") {
-        await deleteAction(message, restBody);
-    }
+    
+    console.log(responseFromBackend);
 });
 
 const deleteAction = async (message, response) => {

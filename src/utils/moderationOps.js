@@ -18,7 +18,9 @@ export const checkRepetitions = (text, maxRepeats) => {
 
 const isCapitalChar = (char) => /[A-Z]/.test(char);
 
-export const calculateCapitalRatio = (sentence) => {
+export const calculateCapitalRatio = (text) => {
+    let sentence = text.replace("\n", "");
+    console.log("Sentence: ", sentence);
     if (sentence.length === 0) {
         return 0;
     }
@@ -35,10 +37,10 @@ export const calculateCapitalRatio = (sentence) => {
 }
 
 export const checkLinks = (text) => {
-    const regex = /^(https?|ftp):\/\/[^\s/$.?#].[^\s]*$/i;
-    return regex.test(text);
+    const regex = new RegExp("[LINK]");
+    return /[LINK]/g.test(text);
 }
 
 export const detectGlobalPing = (text) => {
-    return /@everyone|@here/g.test(text);
+    return /[MENTION]/g.test(text);
 }

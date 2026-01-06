@@ -1,12 +1,13 @@
 import BotSettingModel from "../models/bot.model.js";
 import { ApiError } from "../utils/error.js";
+import { calculateCapitalRatio, checkLinks, checkRepetitions, detectGlobalPing } from "../utils/moderationOps.js";
 
 export const processMessages = async (guildId, contents) => {
-    if(!contents || contents.length === 0) {
+    if (!contents || contents.length === 0) {
         throw new ApiError(400, "Please provice message contents from the bot");
     }
 
-    if(!Array.isArray(contents)) {
+    if (!Array.isArray(contents)) {
         throw new ApiError(400, "contents should be an array");
     }
 
@@ -16,7 +17,7 @@ export const processMessages = async (guildId, contents) => {
     return result;
 }
 
-export const moderateMessage = async ({ guildId, messageContent, authorId, authorName, messageId}) => {
+export const moderateMessage = async ({ guildId, messageContent, authorId, authorName, messageId }) => {
     if (!messageContent || typeof messageContent !== "string") {
         return {
             action: "none",
@@ -25,33 +26,26 @@ export const moderateMessage = async ({ guildId, messageContent, authorId, autho
     }
 
     const sanitizedContent = sanitizeForLLM(messageContent);
-    const rules = await BotSettingModel.findOne({ guildId });
+    const { rules } = await BotSettingModel.findOne({ guildId });
 
-    if (!rules) {
+    if (Object.keys(rules).length === 0) {
         return {
             action: "none",
             reason: "moderation disabled"
         };
     }
 
-    if (rules.bannedWords?.length) {
-        const lowerMsg = sanitizedContent.toLowerCase();
-        const matchedWord = rules.bannedWords.some(word =>
-            lowerMsg.includes(word.toLowerCase())
-        );
+    const rulesToApply = applyRules(rules, sanitizedContent);
+    const result = {
+        engine: "keyword",
+        authorId,
+        authorName,
+        messageId,
+        rulesToApply
+    };
 
-        if (matchedWord) {
-            return {
-                action: "delete",
-                reason: "bannedWords",
-                detail: matchedWord,
-                confidence: 1,
-                engine: "keyword",
-                authorId,
-                authorName,
-                messageId
-            };
-        }
+    if (rulesToApply.length > 0) {
+        return result
     }
 
     if (rules.useLLM) {
@@ -81,7 +75,7 @@ export const moderateMessage = async ({ guildId, messageContent, authorId, autho
 
 const sanitizeForLLM = (content) => {
     return content
-        .substring(0, 500)
+        // .substring(0, 500)
         .replace(/@everyone|@here/g, '[MENTION]')
         .replace(/```[\s\S]*?```/g, '[CODE_BLOCK]')
         .replace(/\bhttps?:\/\/[^\s]+/g, '[LINK]');
@@ -101,12 +95,6 @@ Respond ONLY in JSON format:
 }
 
 const callLLMWithTimeout = (prompt, timeoutMs) => {
-    // return Promise.race([
-    //     callLLM(prompt),
-    //     new Promise((_, reject) =>
-    //         setTimeout(() => reject(new Error('LLM_TIMEOUT')), timeoutMs)
-    //     )
-    // ]);
     return {
         violation: "toxic",
         confidence: 0.5,
@@ -120,4 +108,63 @@ const isValidLLMResponse = (response) => {
         ["toxic", "spam", "off-topic", "none"].includes(response.violation) &&
         typeof response.confidence === "number" &&
         response.confidence >= 0 && response.confidence <= 1;
+}
+
+const applyRules = (rules, textContent) => {
+    const bannedWords = rules.bannedWords || [];
+    const spamDetection = rules.spamDetection;
+    const allowLinks = rules.allowLinks;
+    const allowPings = rules.allowPings;
+
+    const rulesToApply = [];
+
+    if (bannedWords || bannedWords.words.length > 0) {
+        const matchedWords = bannedWords.words.some(word =>
+            textContent.includes(word)
+        );
+        if (matchedWords) {
+            rulesToApply.push({
+                reason: "bannedWords",
+                detail: matchedWords,
+                confidence: 1,
+                engine: "keyword",
+                rulesToApply: bannedWords?.actions || {},
+            });
+        }
+    }
+
+    if (spamDetection) {
+        if (checkRepetitions(textContent, spamDetection.maxRepeats)) {
+            rulesToApply.push({
+                reason: "spamDetection",
+                detail: "",
+                confidence: 1,
+                engine: "keyword",
+                rulesToApply: spamDetection?.actions || {}
+            });
+        }
+    }
+
+    if (!allowLinks && checkLinks(textContent)) {
+        rulesToApply.push({
+            reason: "linksDetected",
+            detail: "Malacious link is detected",
+            confidence: 1,
+            engine: "keyword",
+            rulesToApply: { delete: true }
+        });
+    }
+
+    if (!allowPings && detectGlobalPing(textContent)) {
+        rulesToApply.push({
+            reason: "pingDetected",
+            detail: "Global ping is not allowed",
+            confidence: 1,
+            engine: "keyword",
+            rulesToApply: { delete: true }
+        });
+    }
+
+
+    return rulesToApply;
 }
